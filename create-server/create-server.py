@@ -1,6 +1,8 @@
 import boto3
 import csv
 import pprint
+from yaml import load, dump
+from yaml import Loader, Dumper
 
 print("Starting Fetch test to create servers")
 
@@ -49,13 +51,22 @@ credentials = retreive_credentials()
 ec2_client = create_boto_ec2_client(credentials)
 print_current_instance_count(ec2_client)
 
-ec2_resource = create_boto_ec2_resource(credentials)
-ec2_resource.create_instances(
-    ImageId='ami-000279759c4819ddf',
-    MinCount=1,
-    MaxCount=1,
-    InstanceType='t3.micro'
-)
+with open('create-server/server_specifications.yml') as stream:
+    yaml_server_spec = load(stream, Loader=Loader)
+    # pp.pprint(data)
+server_spec = yaml_server_spec['server']
+
+try:
+    ec2_resource = create_boto_ec2_resource(credentials)
+    ec2_resource.create_instances(
+        ImageId=server_spec['ami_type'],
+        MinCount=server_spec['min_count'],
+        MaxCount=server_spec['max_count'],
+        InstanceType=server_spec['instance_type']
+    )
+except KeyError as e:
+    print("Invalid key reference\n{}".format(e))
+    exit(0)
 
 print_current_instance_count(ec2_client)
 
