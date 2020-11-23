@@ -13,9 +13,25 @@ server:
       size_gb: 10
       type: standard
       mount: /
-    - device: /dev/xvdf
-      size_gb: 100
+    - device: /dev/xvdb
+      size_gb: 10
       type: io1
+      mount: /data
+    - device: /dev/xvdc
+      size_gb: 10
+      type: io2
+      mount: /data
+    - device: /dev/xvdd
+      size_gb: 10
+      type: gp2
+      mount: /data
+    - device: /dev/xvde
+      size_gb: 1000
+      type: sc1
+      mount: /data
+    - device: /dev/xvdf
+      size_gb: 1000
+      type: st1
       mount: /data
   users:
     - login: user1
