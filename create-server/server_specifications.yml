@@ -11,11 +11,11 @@ server:
   volumes:
     - device: /dev/xvda
       size_gb: 10
-      type: ext4
+      type: standard
       mount: /
     - device: /dev/xvdf
       size_gb: 100
-      type: xfs
+      type: io1
       mount: /data
   users:
     - login: user1

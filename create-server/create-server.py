@@ -51,7 +51,7 @@ credentials = retreive_credentials()
 ec2_client = create_boto_ec2_client(credentials)
 print_current_instance_count(ec2_client)
 
-with open('create-server/server_specifications.yml') as stream:
+with open('create-server/complicated_server_specifications.yml') as stream:
     yaml_server_spec = load(stream, Loader=Loader)
     # pp.pprint(data)
 server_spec = yaml_server_spec['server']
@@ -65,6 +65,20 @@ try:
     create_instance_dict['MaxCount']= server_spec['max_count']
     create_instance_dict['InstanceType'] = server_spec['instance_type']
 
+    if 'root_device_type' in server_spec and 'volumes' in server_spec:
+        create_instance_dict['BlockDeviceMappings'] = []
+        for vol in server_spec['volumes']:
+            block_map = {
+                'DeviceName': vol['device'],
+                'Ebs': {
+                    'VolumeSize': vol['size_gb'],
+                    'VolumeType': vol['type'],
+                }
+            }
+            if vol['type'] not in ['standard', 'gp2', 'sc1', 'st1']:
+                block_map['Ebs']['Iops'] = 100
+            create_instance_dict['BlockDeviceMappings'].append(block_map)
+
     ec2_resource.create_instances(
         **create_instance_dict
     )
@@ -74,6 +88,7 @@ try:
 
     # Note not yet used variables
     # # root_device_type
+    # # volume -> mount
 except KeyError as e:
     print("Invalid key reference\n{}".format(e))
     exit(0)
