@@ -66,6 +66,23 @@ def get_server_detail_from_yaml(path):
     return spec
 
 
+def create_server_volume_dictionary(spec):
+    volume_info = []
+    for vol in spec['volumes']:
+        block_map = {
+            'DeviceName': vol['device'],
+            'Ebs': {
+                'VolumeSize': vol['size_gb'],
+                'VolumeType': vol['type'],
+            }
+        }
+        if vol['type'] not in ['standard', 'gp2', 'sc1', 'st1']:
+            block_map['Ebs']['Iops'] = 100
+        volume_info.append(block_map)
+
+    return volume_info
+
+
 def create_kwars_dictionary_for_create_instance(spec):
     create_instance_dict = {}
     try:
@@ -75,18 +92,8 @@ def create_kwars_dictionary_for_create_instance(spec):
         create_instance_dict['InstanceType'] = spec['instance_type']
 
         if 'root_device_type' in spec and 'volumes' in spec:
-            create_instance_dict['BlockDeviceMappings'] = []
-            for vol in spec['volumes']:
-                block_map = {
-                    'DeviceName': vol['device'],
-                    'Ebs': {
-                        'VolumeSize': vol['size_gb'],
-                        'VolumeType': vol['type'],
-                    }
-                }
-                if vol['type'] not in ['standard', 'gp2', 'sc1', 'st1']:
-                    block_map['Ebs']['Iops'] = 100
-                create_instance_dict['BlockDeviceMappings'].append(block_map)
+            create_instance_dict['BlockDeviceMappings'] = create_server_volume_dictionary(spec)
+
         # Note unused variables
         # # architecture
         # # virtualization_type
@@ -94,7 +101,7 @@ def create_kwars_dictionary_for_create_instance(spec):
         # Note not yet used variables
         # # root_device_type
         # # volume -> mount
-        
+
         # TODO: Utilize users info
     except KeyError as e:
         print("Invalid key reference\n{}".format(e))
@@ -103,7 +110,7 @@ def create_kwars_dictionary_for_create_instance(spec):
 
 
 # Retrieve Yaml Info
-server_spec = get_server_detail_from_yaml('create-server/complicated_server_specifications.yml')
+server_spec = get_server_detail_from_yaml('create-server/server_specifications.yml')
 
 # Set up boto resources
 credentials = retrieve_credentials()
@@ -114,9 +121,9 @@ ec2_resource = create_boto_ec2_resource(credentials)
 print_current_instance_count(ec2_client)
 
 # Use Yaml info to create instances
-create_instance_dict = create_kwars_dictionary_for_create_instance(server_spec)
+create_instance_kwargs = create_kwars_dictionary_for_create_instance(server_spec)
 ec2_resource.create_instances(
-    **create_instance_dict
+    **create_instance_kwargs
 )
 
 # Print updated state
