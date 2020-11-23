@@ -40,7 +40,7 @@ def create_boto_ec2_resource(credentials):
 
 def print_current_instance_count(ec2_client):
     response = ec2_client.describe_instances()
-    # pp.pprint(response)
+    pp.pprint(response)
     instance_count = 0
     for reserv in response['Reservations']:
         instance_count += len(reserv['Instances'])
@@ -58,12 +58,22 @@ server_spec = yaml_server_spec['server']
 
 try:
     ec2_resource = create_boto_ec2_resource(credentials)
+
+    create_instance_dict = {}
+    create_instance_dict['ImageId'] = server_spec['ami_type']
+    create_instance_dict['MinCount'] = server_spec['min_count']
+    create_instance_dict['MaxCount']= server_spec['max_count']
+    create_instance_dict['InstanceType'] = server_spec['instance_type']
+
     ec2_resource.create_instances(
-        ImageId=server_spec['ami_type'],
-        MinCount=server_spec['min_count'],
-        MaxCount=server_spec['max_count'],
-        InstanceType=server_spec['instance_type']
+        **create_instance_dict
     )
+    # Note unused variables
+    # # architecture
+    # # virtualization_type
+
+    # Note not yet used variables
+    # # root_device_type
 except KeyError as e:
     print("Invalid key reference\n{}".format(e))
     exit(0)
