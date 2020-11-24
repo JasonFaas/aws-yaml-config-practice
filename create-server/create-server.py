@@ -129,4 +129,8 @@ ec2_resource.create_instances(
 # Print updated state
 print_current_instance_count(ec2_client)
 
+# Current idea for how to add ssh keys:
+# # SSH in to server using detail at https://aws.amazon.com/getting-started/hands-on/remotely-run-commands-ec2-instance-systems-manager/
+# # # Add user key using all the other commands that have been recommended
+
 # TODO: Write more TODOs
